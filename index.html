@@ -23,6 +23,7 @@ div {
 
 main {
     margin: auto;
+    width: 98%;
     max-width: 768px;
     height: 100%;
     position: relative;
@@ -113,6 +114,14 @@ h1 span {
     animation: blink 1s steps(5, start) infinite;
 }
 
+polyline,
+path {
+    fill: none;
+    stroke-width: 4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
 #a {
     overflow: hidden;
     margin: auto;
@@ -122,26 +131,11 @@ h1 span {
     border-radius: 2px;
     background: linear-gradient(45deg, #4776E6 10%, #8E54E9 90%);
 }
-
 #a svg {
     top:14%;
     left:  25%;
     position: absolute;
     transform: translate3d(0,0,0);
-}
-@media (min-width: 600px) {
-    #a svg {
-        top: 8%;
-        left: 19%;
-    }
-}
-
-polyline,
-path {
-    fill: none;
-    stroke-width: 4;
-    stroke-linejoin: round;
-    stroke-linecap: round;
 }
 #a svg:nth-child(1) {
     animation: hover 5s linear infinite;
@@ -165,11 +159,24 @@ path {
     animation: bye 1s linear;
     transform-origin: 25% 30% 0;
 }
+@media (min-width: 600px) {
+    #a svg {
+        top: 8%;
+        left: 19%;
+    }
+}
+@media (orientation: landscape) {
+    #a {
+      height: 50%;
+    }
+    #a svg {
+        top: 2%;
+    }
+}
 
 #b {
     height: 30%;
 }
-
 #b div {
     overflow: hidden;
     position: relative;
@@ -198,6 +205,23 @@ path {
     top: 10%;
     left: 25%;
 }
+#b.ten div {
+    width:19.2%;
+}
+#b.ten div:nth-child(4n) {
+    margin: 1% 1% 0 0;
+}
+#b.ten div:nth-child(5n) {
+    margin: 1% 0 0 0;
+}
+@media (orientation: landscape) {
+    #b {
+        height: 38%;
+    }
+    #b svg {
+        top:2%;
+    }
+}
 
 #m {
     background: rgba(0, 0, 0, 0.8);
@@ -211,16 +235,19 @@ path {
     visibility: hidden;
     transition: opacity 400ms;
 }
-
 #m.show {
     visibility: visible;
     opacity: 1;
 }
-
 #m h2 {
     font-size:24px;
     margin: 30% 10% 0;
     text-align: center;
+}
+@media (orientation: landscape) {
+    #m h2 {
+      margin: 15% 10% 0;
+    }
 }
 @media (max-width: 374px) {
     #m h2 {
@@ -232,6 +259,7 @@ path {
     margin:50px auto 0;
     width: 70%;
     border: none;
+    border-radius: 2px;
     padding: 4% 0;
     color:#fff;
     font-size: 24px;
@@ -320,23 +348,22 @@ path {
 (function () {
     'use strict';
 
-    var a = 0,
-        z = 120,
+    var min = 0,
+        max = 120,
         doc = document,
-        q = doc.querySelectorAll.bind(doc),
-        ct = 5,
-        cl = ['DeepPink', 'LawnGreen', 'Orange', 'Yellow', 'Cyan'],
+        qry = doc.querySelectorAll.bind(doc),
+        colors = ['DeepPink', 'LawnGreen', 'Orange', 'Yellow', 'Cyan'],
         ma = [],
         i = 0,
-        sc = 0,
-        fs = 0,
-        lv = 1,
-        rr = false,
-        mt = false;
+        score = 0,
+        fail = 0,
+        level = 1,
+        filters = false,
+        mute = false;
 
     // empty a node
-    function em(s) {
-        var e = q(s)[0];
+    function empty(s) {
+        var e = qry(s)[0];
         while (e.firstChild) {
             e.removeChild(e.firstChild);
         }
@@ -350,16 +377,16 @@ path {
         po.setAttribute('stroke', st);
         sv.setAttribute('viewBox', '0 0 200 200');
         sv.setAttribute('data-id', id);
-        ma.push([ar, st, id]);
+        // ma.push([ar, st, id]);
         sv.appendChild(po);
 
         if (qs === '#b') {
             var di = doc.createElement('div');
             di.appendChild(sv);
-            q(qs)[0].appendChild(di);
+            qry(qs)[0].appendChild(di);
             return;
         }
-        q(qs)[0].appendChild(sv);
+        qry(qs)[0].appendChild(sv);
     }
 
     // random integer from range
@@ -367,59 +394,95 @@ path {
         return Math.round(Math.random() * (a - i) + i);
     }
 
-    // build random points/d str
-    function rc() {
-        var x = ra(a, z),
-            y = ra(a, z),
+    // build random coordinate points/d attr str
+    function randPtStr() {
+        var startX = ra(min, max),
+            startY = ra(min, max),
             c = ',',
             s = ' ',
             f = '',
-            j = 0;
+            j = 0,
+            ptLvl = level + 2,
+            ptMax = ptLvl < 10 ? ptLvl : 10;
 
         if (ra(0, 1)) {
             // <path d="M0,50 Q10,20 101,40 Q100,0 120,40"...
-            f = 'M' + ra(a, z) + s + ra(a, z) + s +
-                    'Q' + s + ra(a, z) + s + ra(a, z) + c + ra(a, z) + s + ra(a, z);
+            f = 'M' + ra(min, max) + s + ra(min, max) + s +
+                    'Q' + s + ra(min, max) + s + ra(min, max) + c +
+                        ra(min, max) + s + ra(min, max);
 
-            for (j = 0; j < ra(1, (lv + 2)); j += 1) {
-                f += 'M' + ra(a, z) + s + ra(a, z) + s +
-                    'Q' + s + ra(a, z) + s + ra(a, z) + c + ra(a, z) + s + ra(a, z);
+            for (j = 0; j < ra(1, ptMax); j += 1) {
+                f += 'M' + ra(min, max) + s + ra(min, max) + s +
+                    'Q' + s + ra(min, max) + s + ra(min, max) + c +
+                        ra(min, max) + s + ra(min, max);
             }
 
             return f + ' Z';
         } else {
             // <polyline points="95,115 45,80 96,19 4,84 95,115"...
-            f = ra(a, z) + c + ra(a, z) + s;
+            f = ra(min, max) + c + ra(min, max) + s;
 
-            for (j = 0; j < ra(2, (lv + 2)); j += 1) {
-                f += ra(a, z) + c + ra(a, z) + s;
+            for (j = 0; j < ra(2, ptMax); j += 1) {
+                f += ra(min, max) + c + ra(min, max) + s;
             }
-            return x + c + y + s + f + x + c + y;
+            return startX + c + startY + s + f + startX + c + startY;
         }
     }
 
     // initialize
-    function it() {
+    function init() {
+        var tc = 8,
+            fc = 4,
+            coords = '',
+            color = '',
+            ci = ra(0, colors.length - 1),
+            // single color mode every third level after 6th level
+            scm = level > 6 && level % 3 === 0 ? true : false;
+
+        // clear board and array of paths
         ma = [];
-        em('#a');
-        em('#b');
+        empty('#a');
+        empty('#b');
 
-        // build main game area
-        for (i = 0; i < ct; i += 1) {
-            bu(rc(), cl[i], '#a', i);
+        // add more buttons at level 7
+        if (level >= 1) {
+            tc = 10;
+            fc = 6;
+            qry('#b')[0].className += ' ten';
         }
 
-        // insert false items into path array
-        for (i = 0; i < ct; i += 1) {
-            ma.splice(ra(0, ma.length), 0, [rc(), cl[i], null]);
+        // create main game paths
+        for (i = 0; i < 5; i += 1) {
+            ci = scm ? ci : i >= (colors.length - 1) ? ci : i;
+            coords = randPtStr();
+            color = colors[ci];
+
+            bu(coords, color, '#a', i);
+            ma.push([coords, color, i]);
         }
+
+        // insert false paths into path array
+        for (i = 0; i < fc; i += 1) {
+            ci = scm ? ci : i >= (colors.length - 1) ? ci : i;
+            ma.splice(ra(0, ma.length), 0, [randPtStr(), colors[ci], null]);
+        }
+
+        // remove one item from array
+        // for (i = 0; i < ma.length; i += 1) {
+        //     console.log(ma[i][2]);
+        // }
+        // console.log('----');
+        ma = ma.slice(1, ma.length);
+        // for (i = 0; i < ma.length; i += 1) {
+        //     console.log(ma[i][2]);
+        // }
 
         // build buttons
-        for (i = 0; i < 8; i += 1) {
+        for (i = 0; i < ma.length; i += 1) {
             bu(ma[i][0], ma[i][1], '#b', ma[i][2]);
         }
 
-        var bd = q('#b div');
+        var bd = qry('#b div');
 
         for (i = 0; i < bd.length; i += 1) {
             bd[i].addEventListener('click', ck);
@@ -428,10 +491,10 @@ path {
 
     // modal
     function mo(s, t, c) {
-        var e = q('#m')[0],
-            b = q('#m button')[0];
+        var e = qry('#m')[0],
+            b = qry('#m button')[0];
 
-        q('#m h2')[0].innerHTML = s;
+        qry('#m h2')[0].innerHTML = s;
         b.innerHTML = t;
         e.className = 'show';
 
@@ -445,18 +508,18 @@ path {
     }
 
     // mute sound
-    q('#t')[0].addEventListener('click', function (ev) {
+    qry('#t')[0].addEventListener('click', function (ev) {
         var e = ev.currentTarget;
         e.className = e.className.match(/off/) ? '' : ' off';
-        mt = mt ? false : true;
+        mute = mute ? false : true;
     });
 
     // button click
     function ck(ev) {
         var th = ev.currentTarget,
             id = th.firstChild.attributes[1].value,
-            el = q('#a svg[data-id="' + id + '"]')[0],
-            mn = q('main')[0];
+            el = qry('#a svg[data-id="' + id + '"]')[0],
+            mn = qry('main')[0];
 
         // already clicked
         if (th.className.match(/done/)) {
@@ -466,10 +529,10 @@ path {
 
         // wrong
         if (id === 'null') {
-            if (!mt) {
-                q('#ab')[0].play();
+            if (!mute) {
+                qry('#ab')[0].play();
             }
-            fs += 1;
+            fail += 1;
             th.className += ' doh';
             mn.className += ' doh';
             setTimeout(function () {
@@ -477,24 +540,25 @@ path {
             }, 600);
 
             // fail score met
-            if (fs === 2) {
+            if (fail === 2) {
                 mo('YOU HAVE FAILED.<br> ALL IS LOST!', 'TRY AGAIN', function () {
-                    sc = 0;
-                    fs = 0;
-                    lv = 1;
-                    q('#s')[0].innerHTML = sc;
-                    it();
+                    score = 0;
+                    fail = 0;
+                    level = 1;
+                    qry('#s')[0].innerHTML = score;
+                    qry('#b')[0].className = qry('#b')[0].className.replace(' ten');
+                    init();
                 });
             }
             return;
         }
 
         // correct
-        if (!mt) {
-            q('#ag')[0].play();
+        if (!mute) {
+            qry('#ag')[0].play();
         }
-        sc += 50;
-        q('#s')[0].innerHTML = sc;
+        score += 50;
+        qry('#s')[0].innerHTML = score;
         th.className += ' yay';
         el.setAttribute('class', 'bye');
 
@@ -505,67 +569,67 @@ path {
         th.firstChild.setAttribute('data-id', 'null');
 
         // round completed
-        if (q('#b svg[data-id="null"]').length === q('#b svg').length) {
-            if (!mt) {
-                q('#an')[0].play();
+        if (qry('#b svg[data-id="null"]').length === qry('#b svg').length) {
+            if (!mute) {
+                qry('#an')[0].play();
             }
             mn.className += ' yay';
-            fs = 0;
-            lv += 1;
+            fail = 0;
+            level += 1;
 
             setTimeout(function () {
-               it();
+               init();
                mn.className = mn.className.replace(' yay', '');
             }, 1000);
         }
     }
 
     // random filter effect
-    function rf() {
-        var m = q('main')[0],
-            e = q('#e')[0],
-            a = ['bl', 'gr', 'in'],
-            c = a[ra(0, 2)],
-            sh = function () {
-                m.className += ' ' + c;
-                e.className = 'show';
+    function runFilters() {
+        var mn = qry('main')[0],
+            el = qry('#e')[0],
+            arr = ['bl', 'gr', 'in'],
+            className = arr[ra(0, 2)],
+            show = function () {
+                mn.className += ' ' + className;
+                el.className = 'show';
             },
-            hi = function () {
-                m.className = m.className.replace(' ' + c, '');
-                e.className = '';
+            hide = function () {
+                mn.className = mn.className.replace(' ' + className, '');
+                el.className = '';
             };
 
-        if (!rr && lv > 2) {
-            rr = true;
-            sh();
+        if (!filters && level > 2) {
+            filters = true;
+            show();
 
             setTimeout(function () {
-                hi();
+                hide();
 
                 setTimeout(function () {
-                    sh();
+                    show();
                 }, 600);
             }, 300);
 
             setTimeout(function () {
-                hi();
-            }, lv > 10 ? 10000 : 5000);
+                hide();
+            }, level > 10 ? 10000 : 5000);
 
             setTimeout(function () {
-                rr = false;
+                filters = false;
             }, 60000);
         }
     }
 
-    function tk() {
+    function tick() {
         setTimeout(function() {
-            window.requestAnimationFrame(tk);
-            rf();
+            window.requestAnimationFrame(tick);
+            runFilters();
         }, 1000 / 1);
     }
-    tk();
+    tick();
 
-    it();
+    init();
 
     mo('USE THE GLYPH-O-TRON TO REVERSE ENGINEER THE ALIEN BLUEPRINTS!', 'PLAY');
 
